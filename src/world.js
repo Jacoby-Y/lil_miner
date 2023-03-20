@@ -137,6 +137,7 @@ function screenToWorld(x=0,y=0) {
     const index = iy*cols + ix;
 
     return world_data[index];
-}
 
-// console.log("Get quartz block?", screenToWorld(550, 250));
+    // console.log("Get quartz block?", screenToWorld(550, 250));
+    // Testing commit
+}
