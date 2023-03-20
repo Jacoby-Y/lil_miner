@@ -1,23 +1,32 @@
-const canvas = document.querySelector("canvas");
-const ctx = canvas.getContext("2d");
+function addCanvas(qry="canvas") {
+    /** @type {HTMLCanvasElement} */
+    const canvas = document.querySelector(qry);
+    const ctx = canvas.getContext("2d");
 
-ctx.imageSmoothingEnabled = false;
+    canvas.width = 1200;
+    canvas.height = 720;
 
-canvas.width = 1200;
-canvas.height = 720;
+    return { canvas, ctx }
+}
+
+export const canvases = {
+    main: addCanvas("canvas.main"),
+}
 
 export function drawImg(src, x=0, y=0, w=0, h=0) {
 
 }
 
-export function atlas(src, x=0, y=0, w=0, h=0) {
-
-}
-
-export function createAtlas(src="/", columns=0) {
+export function createAtlas(canvas="main", src="/", columns=0) {
     const image = new Image();
     image.loading = "eager";
     image.src = src;
+
+    const ctx = canvases[canvas]?.ctx;
+    if (ctx == undefined) {
+        console.error(`Canvas name "${canvas}" not found!`);
+        return null;
+    }
 
     const cell_size = image.width / columns;
 
