@@ -2,6 +2,7 @@ import { canvases } from "./canvas.js";
 import { main_atlas, main_tiles } from "./tilemaps.js";
 import * as window from "./window.js";
 import { controller } from "./controller.js";
+import createPlayer from "./player.js";
 
 export const cols = 20;
 export const rows = 12;
@@ -114,7 +115,7 @@ const scaleX = (pos=0)=>{
 //     // checkPoint(gx+cell_size, gy-cell_size);
 // }
 
-function checkPoint(x, y) {
+export function checkPoint(x, y) {
     const block = screenToWorld(x, y);
     const ctx = canvases.main.ctx;
 
@@ -128,7 +129,7 @@ function checkPoint(x, y) {
     return block;
 }
 
-function screenToWorld(x=0,y=0) {
+export function screenToWorld(x=0,y=0) {
     const w = width;
     const h = height;
 
@@ -144,40 +145,115 @@ function screenToWorld(x=0,y=0) {
     return world_data[index];
 }
 
-function blockAtCoord(x=0, y=0) {
-    return world_data[x + y*cols];
+export function blockAtCoord(x=0, y=0) {
+    if (x >= cols || y >= rows) return null;
+    return world_data[x + y*cols] ?? null;
 }
 
-function dataAtPoint(x=0, y=0) {
+export function dataAtPoint(x=0, y=0) {
     return [Math.floor(x/cell_size), Math.floor(y/cell_size), screenToWorld(x, y)];
 }
 
-function checkPoints(ox=0, oy=0, nx=0, ny=0, dir="b") {
-    const origin = dataAtPoint(ox, oy);
-    const next = dataAtPoint(nx, ny);
-
-    if (next[2] == null) return [0, 0];
-    if (!main_tiles[next[2]].collider || origin[0] == next[0] && origin[1] == next[1]) return [0, 0];
-    
-    if (dir == "b") {
-        const top = next[1] * cell_size;
-        return [0, top-ny-0.1];
-    }
-    if (dir == "t") {
-        const bottom = next[1] * cell_size;
-        return [0, bottom-ny + cell_size + 0.1];
-    }
-    if (dir == "l") {
-        const left = next[0] * cell_size;
-        return [left-nx+cell_size+0.1, 0];
-    }
-    if (dir == "r") {
-        const right = next[0] * cell_size;
-        return [right-nx, 0];
-    }
+function dataAtCoord(x=0, y=0) {
+    return [x, y, blockAtCoord(x, y)];
 }
 
-function snapPos(x=0, y=0) {
+function highlightCell(x=0, y=0, screen_pos=true) {
+    if (screen_pos) {
+        x = Math.floor(x/cell_size) * cell_size;
+        y = Math.floor(y/cell_size) * cell_size;
+    } else {
+        x *= cell_size;
+        y *= cell_size;
+    }
+
+    canvases.main.ctx.strokeRect(x, y, cell_size, cell_size);
+}
+
+const checkOverlap = (x1, y1, w1, h1, x2, y2, w2, h2)=>{
+	return (
+		x1 + w1 >= x2 && x1 <= x2 + w2 && y1 + h1 >= y2 && y1 <= y2 + h2
+	);
+}
+
+export function checkCollision(x, y, w, h) {
+    const origin = dataAtPoint(x+w/2, y+h/2);
+    if (origin[2] == null) return [0, 0];
+
+    const bot1 = dataAtCoord(origin[0] - 1, origin[1] + 1);
+    const bot2 = dataAtCoord(origin[0], origin[1] + 1);
+    const bot3 = dataAtCoord(origin[0] + 1, origin[1] + 1);
+
+    const top1 = dataAtCoord(origin[0] - 1, origin[1] - 1);
+    const top2 = dataAtCoord(origin[0], origin[1] - 1);
+    const top3 = dataAtCoord(origin[0] + 1, origin[1] - 1);
+
+    const left1 = dataAtCoord(origin[0] - 1, origin[1] + 1);
+    const left2 = dataAtCoord(origin[0] - 1, origin[1]);
+    const left3 = dataAtCoord(origin[0] - 1, origin[1] - 1);
+
+    const right1 = dataAtCoord(origin[0] + 1, origin[1] + 1);
+    const right2 = dataAtCoord(origin[0] + 1, origin[1]);
+    const right3 = dataAtCoord(origin[0] + 1, origin[1] - 1);
+
+    function collide(x1, y1, w1, h1, x2, y2, w2, h2) {
+        if (!checkOverlap(x1, y1, w1, h1, x2, y2, w2, h2)) {
+            // canvases.main.ctx.strokeRect(x, y-10, 10, 10);
+            return [0, 0];
+        }
+        
+        const to_right =   x1+w1 - x2;
+        const to_left =  x2+w2 - x1;
+        const to_top =    y2+h2 - y1;
+        const to_bottom = y1+h1 - y2;
+        const closest = Math.min(
+            to_left,
+            to_right,
+            to_top,
+            to_bottom
+        );
+
+        if (closest == to_top) return [0, to_top];
+        if (closest == to_bottom) return (y -= to_bottom, [0, -to_bottom]);
+        if (closest == to_left) return [to_left, 0];
+        if (closest == to_right) return [-to_right, 0];
+    }
+
+    function collideBox(box=[1,2,3]) {
+        if (main_tiles[box[2]]?.collider) {
+            return collide(
+                x, y, w, h,
+                box[0] * cell_size, box[1] * cell_size, cell_size, cell_size
+            );
+        }
+        return [0, 0];
+    }
+
+    function wrapBox(box1, box2, box3) {
+        return [
+            collideBox(box1),
+            collideBox(box2),
+            collideBox(box3),
+        ]// .find(([x, y])=> x != 0 || y != 0) ?? [0,0];
+    }
+
+    const col_bot = wrapBox(bot1, bot2, bot3);
+    const col_top = wrapBox(top1, top2, top3);
+    const col_left = wrapBox(left1, left2, left3);
+    const col_right = wrapBox(right1, right2, right3);
+
+    return [
+        ...col_bot,
+        ...col_top,
+        ...col_left,
+        ...col_right,
+    ].reduce((p, c)=> [
+        p[0] || p[0] + c[0],
+        p[1] || p[1] + c[1]
+    ], [0, 0]);
+}
+
+export function snapPos(x=0, y=0) {
     return [Math.floor(x/cell_size)*cell_size, Math.floor(y/cell_size)*cell_size];
 }
 
@@ -198,75 +274,13 @@ canvases.main.canvas.onmousemove = (ev)=>{
 document.onmouseup = document.onmouseleave = ()=> mouse.down = false;
 document.onmousedown = document.onmouseenter = ()=> mouse.down = true;
 
-let box = {
-    width: cell_size-20,
-    height: cell_size-20,
-    px: 400,
-    py: 50,
-    vx: 0,
-    vy: 0,
-    grounded: false,
-    draw() {
-        canvases.main.ctx.fillStyle = "green";
-        canvases.main.ctx.fillRect(this.px, this.py, this.width, this.height);
-    },
-    addDiff(diff=[0,0]) {
-        let [x, y] = diff;
-        if (x == 0 && y == 0) return false;
-        //  || Math.floor(Math.abs(y)) == 0
-        
-        if (x != 0) this.vx = 0;
-        if (y != 0) this.vy = 0;
-
-        this.px += x;
-        this.py += y;
-        
-        return true;
-    },
-    collide() {
-        const ctx = canvases.main.ctx;
-
-        const col = (x1=0, y1=0, x2=0, y2=0, d="b")=> this.addDiff(checkPoints(x1, y1, x2, y2, d));
-
-        const col_bot = col(this.px+2, this.py, this.px+2, (this.py + this.height), "b") || col((this.px + this.width)-2, this.py, (this.px + this.width)-2, (this.py + this.height), "b")
-        const col_top = col(this.px+2, (this.py + this.height), this.px+2, this.py, "t") || col((this.px + this.width)-2, (this.py + this.height), (this.px + this.width)-2, this.py, "t")
-        const col_right = col(this.px, this.py, (this.px + this.width), this.py, "r") || col(this.px, (this.py + this.height), (this.px + this.width), (this.py + this.height), "r");
-        const col_left = col((this.px + this.width), this.py, this.px, this.py, "l") || col((this.px + this.width), (this.py + this.height), this.px, (this.py + this.height), "l");
-        
-        if (col_bot) this.grounded = true;
-        else this.grounded = false;
-    },
-    physics() {
-        this.collide();
-
-        this.px += this.vx;
-        this.py += this.vy;
-
-        this.vy += 0.5;
-        this.vx *= 0.95;
-        this.vy *= 0.95;
-
-        if (this.grounded) this.vx *= 0.8;
-
-        // this.collide();
-    },
-    controller() {
-        if ((controller.space === true || controller.w || controller.up) && this.grounded) {
-            this.vy -= 12;
-            this.grounded = false;
-        }
-        else if (controller.a || controller.left) this.vx -= 1;
-        else if (controller.d || controller.right) this.vx += 1;
-    },
-}
+const player = createPlayer();
 
 setInterval(()=>{
     const ctx = canvases.main.ctx;
     ctx.putImageData(prev_render, 0, 0);
 
-    box.controller();
-    box.physics();
-    box.draw();
+    player.update();
 
     {
         const [x, y] = snapPos(mouse.x, mouse.y);
@@ -279,21 +293,19 @@ setInterval(()=>{
     // if (!mouse.down) return;
     
     {
-        // ctx.beginPath();
-        // ctx.arc(mouse.x, mouse.y, 10, 0, 2*Math.PI);
-        // ctx.fill();
-
-        const x = box.px + box.width/2;
-        const y = box.py + box.height/2;
+        const x = player.px + player.width/2;
+        const y = player.py + player.height/2;
 
         const ang = Math.atan2(mouse.y-y, mouse.x-x);
 
         const tox = x + Math.cos(ang) * cell_size;
         const toy = y + Math.sin(ang) * cell_size;
 
+        // ctx.fillRect(tox, toy, 10, 10);
+
         const [bx, by, id] = dataAtPoint(tox, toy);
 
-        if (main_tiles[id].collider) {
+        if (main_tiles[id]?.collider) {
             if (mouse.down) ctx.strokeStyle = "#ffaaaabb";
             else ctx.strokeStyle = "#ffaaaabb";
             
@@ -302,4 +314,4 @@ setInterval(()=>{
             ctx.strokeStyle = "black";
         }
     }
-}, 1000/30)
+}, 1000/30);
