@@ -7,3 +7,4 @@ console.log(tilemaps.main_tiles);
 
 world.generate();
 world.render();
+

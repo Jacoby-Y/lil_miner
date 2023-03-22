@@ -25,6 +25,3 @@ export const main_tiles = {
 };
 
 export const main_atlas = createAtlas("main", "../assets/main_tilemap.png", 10);
-
-main_atlas.drawAtCoord(10, 10, 30, 30, 3, 0);
-main_atlas.drawAtIndex(10, 40, 30, 30, 12);

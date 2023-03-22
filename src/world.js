@@ -25,6 +25,8 @@ export const world_data = new Uint8Array([
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1,
 ]);
 
+console.log(world_data[0]);
+
 export function generate() {
     // for (let i = 0; i < world_data.length; i++) {
     //     world_data[i] = Math.floor(Math.random() * 13);
