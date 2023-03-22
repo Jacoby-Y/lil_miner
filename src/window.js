@@ -1,7 +1,6 @@
 export let scale = 1;
 
 window.onresize = ()=>{
-    console.log(window);
     scale = 1;
     const w = document.body.parentElement.clientWidth;
     const h = document.body.parentElement.clientHeight;

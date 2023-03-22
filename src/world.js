@@ -1,5 +1,5 @@
 import { canvases } from "./canvas.js";
-import { main_atlas, main_tiles } from "./tilemaps.js";
+import { MainTileIds, main_atlas, main_tiles } from "./tilemaps.js";
 import * as window from "./window.js";
 import { controller } from "./controller.js";
 import createPlayer from "./player.js";
@@ -30,7 +30,7 @@ export const world_data = new Uint8Array(rows*cols).fill(1);
 //     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1,
 // ]);
 
-console.log(world_data.length);
+// console.log(world_data.length);
 
 export function generate() {
     // for (let i = 0; i < world_data.length; i++) {
@@ -39,23 +39,37 @@ export function generate() {
 
     world_data.fill(1);
 
+    const noise = noiseGrid(0.55, world_data.length);
+    const cel_aut = cellularAutomata(4, noise, 4);
+    // console.log(noise);
+    // console.log(cel_aut);
+
+    const ore_chance = 0.01;
+    for (let i = 0; i < world_data.length; i++) {
+        if (Math.random() > ore_chance) continue;
+        veinMaker(i % cols, Math.floor(i/cols), Math.ceil(Math.random()*2 + 1), Math.floor(Math.random() * 3 + 3));
+    }
+
+    for (let i = 0; i < cel_aut.length; i++) {
+        const id = cel_aut[i];
+        if (id == 1) world_data[i] = MainTileIds.cave_wall;
+    }
+
     
-    for (let i = 0; i < 40; i++) {
-        const rx = Math.floor(Math.random() * cols);
-        const ry = Math.floor(Math.random() * rows);
+    // for (let i = 0; i < 40; i++) {
+    //     const rx = Math.floor(Math.random() * cols);
+    //     const ry = Math.floor(Math.random() * rows);
         
-        // veinMaker(rx, ry, Math.ceil(Math.random()*3 + 1), Math.floor(Math.random() * 20));
-        veinMaker(rx, ry, Math.ceil(Math.random()*3+1), Math.floor(Math.random() * 3 + 3));
-    }
-
-    // veinMaker(60, 30, 500, 22);
+    //     // veinMaker(rx, ry, Math.ceil(Math.random()*3 + 1), Math.floor(Math.random() * 20));
+    //     veinMaker(rx, ry, Math.ceil(Math.random()*3+1), Math.floor(Math.random() * 3 + 3));
+    // }
     
-    for (let i = 0; i < 20; i++) {
-        const rx = Math.floor(Math.random() * cols);
-        const ry = Math.floor(Math.random() * rows);
+    // for (let i = 0; i < 20; i++) {
+    //     const rx = Math.floor(Math.random() * cols);
+    //     const ry = Math.floor(Math.random() * rows);
 
-        for (let j = 0; j < 10; j++) veinMaker(rx, ry, 20, 22);
-    }
+    //     for (let j = 0; j < 10; j++) veinMaker(rx, ry, 20, MainTileIds.cave_wall);
+    // }
 }
 
 let prev_render = null;
@@ -83,7 +97,7 @@ function placeBlock(x=0, y=0, id=0) {
     world_data[x + y*cols] = id;
 }
 
-function veinMaker(x=0, y=0, size=5, id=22, weights=[1,1,1,1]) {
+function veinMaker(x=0, y=0, size=5, id=MainTileIds.cave_wall, weights=[1,1,1,1]) {
     let [cx, cy] = [x, y];
 
     placeBlock(cx, cy, id);
@@ -110,6 +124,57 @@ function veinMaker(x=0, y=0, size=5, id=22, weights=[1,1,1,1]) {
     for (let i = 0; i < size; i++) {
         step();
     }
+}
+
+function noiseGrid(density=0.5, size=10) {
+    const grid = new Uint8Array(size);
+    for (let i = 0; i < grid.length; i++) {
+        if (
+            i % cols == 0 || Math.floor(i/cols) == 0 ||
+            i % cols == cols - 1 || Math.floor(i/cols) == rows - 1) continue;
+        grid[i] = Math.random() > density ? 0 : 1;
+    }
+    return grid;
+}
+
+function cellularAutomata(iters=1, grid=[0], neighbor=4) {
+    function blockAtCoord(x=0, y=0) {
+        if (x >= cols || y >= rows || x < 0 || y < 0) return null;
+        return grid[x + y*cols] ?? null;
+    }    
+    function neighborCount(x=0, y=0) {
+        let count = 0;
+
+        for (let a = -1; a < 2; a++) {
+            for (let b = -1; b < 2; b++) {
+                const cx = x + a;
+                const cy = y + b;
+                if (cx == x && cy == y) continue;
+                const block = blockAtCoord(cx, cy);
+                if (block == null || block == 1) count++; 
+            }
+        }
+
+        return count;
+    }
+    function runAutomata() {
+        const new_grid = new Uint8Array(grid.length);
+        for (let j = 0; j < new_grid.length; j++) {
+            const x = j % cols;
+            const y = Math.floor(j/cols);
+            const neighbors = neighborCount(x, y);
+            if (neighbors > neighbor) new_grid[j] = 1;
+            else new_grid[j] = 0;
+        }
+        return new_grid;
+    }
+
+    for (let i = 0; i < iters; i++) {
+        const new_grid = runAutomata();
+        grid = new_grid;
+    }
+
+    return grid;
 }
 
 //#region | Crap
@@ -207,7 +272,7 @@ export function screenToWorld(x=0,y=0) {
 }
 
 export function blockAtCoord(x=0, y=0) {
-    if (x >= cols || y >= rows) return null;
+    if (x >= cols || y >= rows || x < 0 || y < 0) return null;
     return world_data[x + y*cols] ?? null;
 }
 
@@ -236,7 +301,7 @@ function mineBlock(x=0, y=0) {
     if (block == null) return;
     if ((main_tiles[block[2]]?.collider ?? false) == false) return;
 
-    world_data[x + y*cols] = 22;
+    world_data[x + y*cols] = MainTileIds.cave_wall;
 
     render();
 }

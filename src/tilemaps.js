@@ -24,4 +24,27 @@ export const main_tiles = {
     23: newTile("cave_entrance", false),
 };
 
+export const MainTileIds = {
+    sky: 0,
+    dirt: 1,
+    quartz: 3,
+    coal: 4,
+    iron: 5,
+    copper: 6,
+    ruby: 7,
+    gold: 8,
+    diamond: 9,
+    grass: 10,
+    flower_1: 11,
+    flower_2: 12,
+    grass_block_1: 20,
+    grass_block_2: 21,
+    cave_wall: 22,
+    cave_entrance: 23,
+}
+
+// export const MainTileIds = Object.fromEntries(
+//     Object.entries(main_tiles).map(([k, v])=> [v.name, k])
+// )
+
 export const main_atlas = createAtlas("main", "../assets/main_tilemap.png", 10);
