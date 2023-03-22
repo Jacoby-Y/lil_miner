@@ -1,3 +1,5 @@
+import { generate, render } from "./world.js";
+
 export const controller = {
     w: false,
     a: false,
@@ -25,4 +27,9 @@ window.onkeyup = ({ key })=>{
     if (low.includes("arrow")) controller[low.slice(5)] = false;
     else if (controller[low] != undefined) controller[low] = false;
     else if (low == " ") controller.space = false;
+
+    if (key == "R") {
+        generate();
+        render();
+    }
 }

@@ -4,33 +4,58 @@ import * as window from "./window.js";
 import { controller } from "./controller.js";
 import createPlayer from "./player.js";
 
-export const cols = 20;
-export const rows = 12;
-export const cell_size = 60;
+// export const cols = 20;
+// export const rows = 12;
+export const cols = 120;
+export const rows = cols * (3/5);
+export const cell_size = 1200/cols;
 export const width = cols * cell_size;
 export const height = rows * cell_size;
 
-export const world_data = new Uint8Array([
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 0, 0, 0, 0, 1, 1, 0, 1, 5, 0, 0, 1, 1, 1, 1, 4, 1, 1, 1,
-    1, 1, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 1, 1, 1, 1, 4, 1, 1, 1,
-    1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 4, 1, 4, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1,
-    1, 1, 1, 1, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5,
-    1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 5, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1,
-]);
+// 12 / 20 -> 6/10 -> 3/5
 
-console.log(world_data[0]);
+export const world_data = new Uint8Array(rows*cols).fill(1);
+// export const world_data = new Uint8Array([
+//     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+//     1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+//     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+//     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+//     1, 0, 0, 0, 0, 1, 1, 0, 1, 5, 0, 0, 1, 1, 1, 1, 4, 1, 1, 1,
+//     1, 1, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 1, 1, 1, 1, 4, 1, 1, 1,
+//     1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 4, 1, 4, 1, 1,
+//     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 1, 1, 1,
+//     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1,
+//     1, 1, 1, 1, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5,
+//     1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 5, 1,
+//     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1,
+// ]);
+
+console.log(world_data.length);
 
 export function generate() {
     // for (let i = 0; i < world_data.length; i++) {
     //     world_data[i] = Math.floor(Math.random() * 13);
     // }
+
+    world_data.fill(1);
+
+    
+    for (let i = 0; i < 40; i++) {
+        const rx = Math.floor(Math.random() * cols);
+        const ry = Math.floor(Math.random() * rows);
+        
+        // veinMaker(rx, ry, Math.ceil(Math.random()*3 + 1), Math.floor(Math.random() * 20));
+        veinMaker(rx, ry, Math.ceil(Math.random()*3+1), Math.floor(Math.random() * 3 + 3));
+    }
+
+    // veinMaker(60, 30, 500, 22);
+    
+    for (let i = 0; i < 20; i++) {
+        const rx = Math.floor(Math.random() * cols);
+        const ry = Math.floor(Math.random() * rows);
+
+        for (let j = 0; j < 10; j++) veinMaker(rx, ry, 20, 22);
+    }
 }
 
 let prev_render = null;
@@ -54,6 +79,40 @@ export function render() {
     prev_render = canvases.main.ctx.getImageData(0, 0, width, height);
 }
 
+function placeBlock(x=0, y=0, id=0) {
+    world_data[x + y*cols] = id;
+}
+
+function veinMaker(x=0, y=0, size=5, id=22, weights=[1,1,1,1]) {
+    let [cx, cy] = [x, y];
+
+    placeBlock(cx, cy, id);
+
+    function step() {
+        let dir = Math.floor(Math.random()*4);
+
+        // if (dir == 0) {
+        //     const to_change = blockAtCoord(cx, cy - 1);
+        //     if (to_change == null || to_change == id) {
+        //         dir = (dir + 1) % 4;
+        //     } else {
+        //         cy -= 1;
+        //     }
+        // }
+        if (dir == 0) cy -= 1;
+        if (dir == 2) cy += 1;
+        if (dir == 1) cx -= 1;
+        if (dir == 3) cx += 1;
+        
+        placeBlock(cx, cy, id);
+    }
+
+    for (let i = 0; i < size; i++) {
+        step();
+    }
+}
+
+//#region | Crap
 const lerp = (val=1, min=0, max=2)=> (val - min) / (max - min);
 
 const scaleY = (pos=0)=>{
@@ -289,6 +348,8 @@ document.onmousedown = document.onmouseenter = ()=> mouse.down = true;
 const player = createPlayer();
 
 setInterval(()=>{
+    return;
+
     const ctx = canvases.main.ctx;
     ctx.putImageData(prev_render, 0, 0);
 
@@ -329,3 +390,5 @@ setInterval(()=>{
         }
     }
 }, 1000/30);
+
+//#endregion
