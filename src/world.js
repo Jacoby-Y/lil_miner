@@ -4,31 +4,31 @@ import * as window from "./window.js";
 import { controller } from "./controller.js";
 import createPlayer from "./player.js";
 
-// export const cols = 20;
-// export const rows = 12;
-export const cols = 120;
-export const rows = cols * (3/5);
+export const cols = 20;
+export const rows = 12;
+// export const cols = 120;
+// export const rows = cols * (3/5);
 export const cell_size = 1200/cols;
 export const width = cols * cell_size;
 export const height = rows * cell_size;
 
 // 12 / 20 -> 6/10 -> 3/5
 
-export const world_data = new Uint8Array(rows*cols).fill(1);
-// export const world_data = new Uint8Array([
-//     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-//     1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
-//     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
-//     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
-//     1, 0, 0, 0, 0, 1, 1, 0, 1, 5, 0, 0, 1, 1, 1, 1, 4, 1, 1, 1,
-//     1, 1, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 1, 1, 1, 1, 4, 1, 1, 1,
-//     1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 4, 1, 4, 1, 1,
-//     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 1, 1, 1,
-//     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1,
-//     1, 1, 1, 1, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5,
-//     1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 5, 1,
-//     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1,
-// ]);
+// export const world_data = new Uint8Array(rows*cols).fill(1);
+export const world_data = new Uint8Array([
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 0, 0, 0, 0, 1, 1, 0, 1, 5, 0, 0, 1, 1, 1, 1, 4, 1, 1, 1,
+    1, 1, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 1, 1, 1, 1, 4, 1, 1, 1,
+    1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 4, 1, 4, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1,
+    1, 1, 1, 1, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5,
+    1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 5, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1,
+]);
 
 // console.log(world_data.length);
 
@@ -355,38 +355,51 @@ export function checkCollision(x, y, w, h) {
         if (closest == to_right) return [-to_right, 0];
     }
 
-    function collideBox(box=[1,2,3]) {
+    function collideBox(box=[1,2,3], off=[0,0]) {
         if (main_tiles[box[2]]?.collider) {
             return collide(
-                x, y, w, h,
+                x+off[0], y+off[1], w, h,
                 box[0] * cell_size, box[1] * cell_size, cell_size, cell_size
             );
         }
         return [0, 0];
     }
 
-    function wrapBox(box1, box2, box3) {
+    function wrapBox(box1, box2, box3, off) {
         return [
-            collideBox(box1),
-            collideBox(box2),
-            collideBox(box3),
-        ]// .find(([x, y])=> x != 0 || y != 0) ?? [0,0];
+            collideBox(box1, off),
+            collideBox(box2, off),
+            collideBox(box3, off),
+        ].find(([x, y])=> x != 0 || y != 0) ?? [0,0];
     }
 
-    const col_bot = wrapBox(bot1, bot2, bot3);
-    const col_top = wrapBox(top1, top2, top3);
-    const col_left = wrapBox(left1, left2, left3);
-    const col_right = wrapBox(right1, right2, right3);
+    const vecAdd = (vec1, vec2)=>{ vec1[0] += vec2[0]; vec1[1] += vec2[1] }
 
-    return [
-        ...col_bot,
-        ...col_top,
-        ...col_left,
-        ...col_right,
-    ].reduce((p, c)=> [
-        p[0] || p[0] + c[0],
-        p[1] || p[1] + c[1]
-    ], [0, 0]);
+    let off = [0,0];
+    const col_bot = wrapBox(bot1, bot2, bot3, off);
+    vecAdd(off, col_bot);
+    const col_top = wrapBox(top1, top2, top3, off);
+    vecAdd(off, col_top);
+    const col_left = wrapBox(left1, left2, left3, off);
+    vecAdd(off, col_left);
+    const col_right = wrapBox(right1, right2, right3, off);
+    vecAdd(off, col_right);
+    
+    return off;
+    
+    // const result = [
+    //     ...col_bot,
+    //     ...col_top,
+    //     ...col_left,
+    //     ...col_right,
+    // ].reduce((p, c)=> [
+    //     p[0] || p[0] + c[0],
+    //     p[1] || p[1] + c[1]
+    // ], [0, 0]);
+
+    // console.log(result);
+    
+    // return result;
 }
 
 export function snapPos(x=0, y=0) {
@@ -413,8 +426,6 @@ document.onmousedown = document.onmouseenter = ()=> mouse.down = true;
 const player = createPlayer();
 
 setInterval(()=>{
-    return;
-
     const ctx = canvases.main.ctx;
     ctx.putImageData(prev_render, 0, 0);
 
