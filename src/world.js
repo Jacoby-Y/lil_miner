@@ -170,6 +170,16 @@ function highlightCell(x=0, y=0, screen_pos=true) {
     canvases.main.ctx.strokeRect(x, y, cell_size, cell_size);
 }
 
+function mineBlock(x=0, y=0) {
+    const block = dataAtCoord(x, y);
+    if (block == null) return;
+    if ((main_tiles[block[2]]?.collider ?? false) == false) return;
+
+    world_data[x + y*cols] = 22;
+
+    render();
+}
+
 const checkOverlap = (x1, y1, w1, h1, x2, y2, w2, h2)=>{
 	return (
 		x1 + w1 >= x2 && x1 <= x2 + w2 && y1 + h1 >= y2 && y1 <= y2 + h2
@@ -304,6 +314,8 @@ setInterval(()=>{
         // ctx.fillRect(tox, toy, 10, 10);
 
         const [bx, by, id] = dataAtPoint(tox, toy);
+
+        if (mouse.down) mineBlock(bx, by);
 
         if (main_tiles[id]?.collider) {
             if (mouse.down) ctx.strokeStyle = "#ffaaaabb";
