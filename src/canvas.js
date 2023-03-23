@@ -1,11 +1,13 @@
 function addCanvas(qry="canvas") {
     /** @type {HTMLCanvasElement} */
-    const canvas = document.querySelector(qry);
-    const ctx = canvas.getContext("2d");
 
+    const canvas = document.querySelector(qry);
     canvas.width = 1200;
     canvas.height = 720;
 
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.imageSmoothingEnabled = false;
+    
     return { canvas, ctx }
 }
 
@@ -32,7 +34,6 @@ export function createAtlas(canvas="main", src="/", columns=0) {
 
     return {
         drawAtCoord(dx=0, dy=0, w=10, h=10, ix=0, iy=0) {
-            ctx.imageSmoothingEnabled = false;
             ctx.drawImage(
                 image, 
                 ix*cell_size, iy*columns*cell_size, 
@@ -42,7 +43,6 @@ export function createAtlas(canvas="main", src="/", columns=0) {
             );
         },
         drawAtIndex(dx=0, dy=0, w=10, h=10, i=0) {
-            ctx.imageSmoothingEnabled = false;
             ctx.drawImage(
                 image, 
                 (i%columns)*cell_size, Math.floor(i/columns)*cell_size, 
