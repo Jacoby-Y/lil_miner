@@ -18,8 +18,11 @@ export default function() {
     const move_speed = 0.8;
 
     function draw() {
+        const time1 = performance.now();
         ctx.fillStyle = "green";
         ctx.fillRect(px, py, width, height);
+        const time2 = performance.now();
+        console.log(`draw() ran at ${time2-time1} milliseconds.`);
     }
     function addDiff(diff=[0,0]) {
         let [x, y] = diff;

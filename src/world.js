@@ -75,7 +75,7 @@ export function generate() {
 let prev_render = null;
 
 export function render() {
-    // console.time("render");
+    const time1 = performance.now();
     for (let i = 0; i < world_data.length; i++) {
         const id = world_data[i];
         const x = cell_size * (i%cols);
@@ -88,9 +88,11 @@ export function render() {
 
         if (id == 3) console.log(x, y);
     }
-    // console.timeEnd("render");
+    const time2 = performance.now();
 
     prev_render = canvases.main.ctx.getImageData(0, 0, width, height);
+
+    console.log(`render() ran at ${time2-time1} milliseconds.`);
 }
 
 function placeBlock(x=0, y=0, id=0) {
